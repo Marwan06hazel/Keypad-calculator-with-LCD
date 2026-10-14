@@ -6,6 +6,8 @@
 /* Flag: true when a number has been typed and is waiting for an operator or '=' */
 bool opNumber=false;
 
+static uint8 digitsCount=0;
+
 /* Holds one number (or one operator character) stored in the expression */
 typedef struct number {
 	float32 value;
@@ -25,7 +27,7 @@ struct node* head = NULL;
  * Create a new node holding 'value' and add it at the end of the list.
  * Used for both numbers and operator characters.
  */
-void createNumber(float32 value){
+void createNumber(float64 value){
 	node* link = malloc(sizeof(struct node));
 	node* curr = NULL;
 
@@ -53,7 +55,7 @@ void createNumber(float32 value){
  * Description:
  * Apply one operation (+ - * /) on two numbers and return the result.
  */
-float32 Evaluate(uint8 operation, float32 num1, float32 num2){
+float64 Evaluate(uint8 operation, float64 num1, float64 num2){
 	switch(operation){
 	case '+':
 		return num1 + num2;
@@ -143,7 +145,7 @@ bool calculatable(bool flag){
 }
 
 int main(void){
-	float32 number=0;   /* Number currently being typed */
+	float64 number=0;   /* Number currently being typed */
 	uint8 op;           /* Last operator pressed */
 	uint8 key;          /* Key returned by the keypad */
 	bool flag=true;     /* true: calculator accepts input, false: result is shown */
@@ -152,9 +154,12 @@ int main(void){
 	for(;;){
 		key = KEYPAD_getPressedKey();
 
+		if(digitsCount > 16) flag=false;
+
 		/* Digit: show it and add it to the number being typed */
 		if(key <= 9 && calculatable(flag)){
 			LCD_integerToString(key);
+			digitsCount++;
 			number = (number*10) + key;
 			opNumber=true;
 		}
@@ -174,6 +179,7 @@ int main(void){
 		}else if(IsOperation(key) && opNumber==true && calculatable(flag)){
 			op = key;
 			LCD_displayCharacter(key);
+			digitsCount++;
 
 			createNumber(number);
 			createNumber(op);
@@ -187,6 +193,7 @@ int main(void){
 			number = 0;
 			opNumber = false;
 			flag=true;
+			digitsCount = 0;
 		}
 	}
 }
